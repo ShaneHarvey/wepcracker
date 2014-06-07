@@ -6,3 +6,6 @@ class Interface:
         self.essid = essid
         self.mode = mode
         self.bssid = bssid
+
+    def tostring(self):
+        return 'name: ' + str(self.name) + ', essid: ' + str(self.essid) + ', mode: ' + str(self.mode) + ', bssid: ' + str(self.bssid)

@@ -6,12 +6,14 @@ from interface import Interface
 
 __author__ = 'michael'
 
+
 def iwconfig():
+    devnull = open(os.devnull, 'w')
     lst = []
-    tmpiface = Interface(None, None, None, None)
 
     cmd = Popen(['iwconfig'], stdout=PIPE, stderr=devnull)
     for line in cmd.communicate()[0].split('\n\n'):
+        tmpiface = Interface(None, None, None, None)
         line = line.strip()
 
         if len(line) == 0:
@@ -22,16 +24,21 @@ def iwconfig():
         ifmode = re.search('Mode:([A-Za-z]+)', line)
         ifbssid = re.search('Access Point: ([0-9:A-F]+)', line)
 
-        if ifname is not None and ifessid is not None and ifmode is not None and ifbssid is not None:
-            lst.append(Interface(ifname.group(1), ifessid.group(1), ifmode.group(1), ifbssid.group(1)))
-            print ifname.group(1)
-            print ifessid.group(1)
-            print ifmode.group(1)
-            print ifbssid.group(1)
+        if ifname is not None:
+            tmpiface.name = ifname.group(1)
 
+            if ifessid is not None:
+                tmpiface.essid = ifessid.group(1)
+
+            if ifmode is not None:
+                tmpiface.mode = ifmode.group(1)
+
+            if ifbssid is not None:
+                tmpiface.bssid = ifbssid.group(1)
+
+            lst.append(tmpiface)
+
+        devnull.close()
         return lst
 
-devnull = open(os.devnull, 'w')
-iwconfig()
-
-devnull.close()
+print iwconfig()[0].tostring()
