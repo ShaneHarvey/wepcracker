@@ -38,8 +38,8 @@ def iwconfig():
 
             lst.append(tmpiface)
 
-        devnull.close()
-        return lst
+    devnull.close()
+    return lst
 
 
 def main():
