@@ -6,6 +6,10 @@ from interface import Interface
 
 __author__ = 'michael'
 
+def startmonmode(iface):
+    os.system('ifconfig %s down' % iface)
+    os.system('iwconfig %s mode monitor' % iface)
+    os.system('ifconfig %s up' % iface)
 
 def iwconfig():
     devnull = open(os.devnull, 'w')
@@ -48,7 +52,10 @@ def main():
     for i in interfaces:
         print i.tostring()
 
+    pick = input('Pick one: ')
 
+    print 'putting %s in mon mode' % interfaces[pick].name
+    startmonmode(interfaces[pick].name)
 
 
 if __name__ == '__main__':
