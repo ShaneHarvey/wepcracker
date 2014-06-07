@@ -1,15 +1,18 @@
-import os
-import re
 from subprocess import Popen, PIPE
+
+from scapy.all import *
+
 from interface import Interface
 
 
 __author__ = 'michael'
 
+
 def startmonmode(iface):
     os.system('ifconfig %s down' % iface)
     os.system('iwconfig %s mode monitor' % iface)
     os.system('ifconfig %s up' % iface)
+
 
 def iwconfig():
     devnull = open(os.devnull, 'w')
@@ -52,10 +55,14 @@ def main():
     for i in interfaces:
         print i.tostring()
 
-    pick = input('Pick one: ')
+    pick = input('Pick one (starting from 0): ')
+    pick = interfaces[pick].name
 
-    print 'putting %s in mon mode' % interfaces[pick].name
-    startmonmode(interfaces[pick].name)
+    print 'putting %s in mon mode' % pick
+    startmonmode(pick)
+    conf.iface = pick
+    print 'ok I should be printing out packets now'
+    sniff()
 
 
 if __name__ == '__main__':
