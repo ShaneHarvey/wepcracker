@@ -41,4 +41,15 @@ def iwconfig():
         devnull.close()
         return lst
 
-print iwconfig()[0].tostring()
+
+def main():
+    interfaces = iwconfig()
+
+    for i in interfaces:
+        print i.tostring()
+
+
+
+
+if __name__ == '__main__':
+    main()
