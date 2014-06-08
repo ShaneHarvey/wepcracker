@@ -61,6 +61,21 @@ def startmonmode(iface):
     os.system('ifconfig %s up' % iface)
 
 
+def stopmonmode(iface):
+    os.system('ifconfig %s down' % iface)
+    os.system('iwconfig %s mode managed' % iface)
+    os.system('ifconfig %s up' % iface)
+
+
+def checkformon(lst):
+    rtn = None
+    for i in lst:
+        if i.mode == 'Monitor':
+            rtn = i
+            break
+    return rtn
+
+
 def iwconfig():
     devnull = open(os.devnull, 'w')
     lst = []
@@ -101,15 +116,27 @@ def main():
     aps = {}
 
     interfaces = iwconfig()
+    foundmon = checkformon(interfaces)
+    pick = None
 
-    for i in interfaces:
-        print i.tostring()
+    if foundmon is not None:
+        print foundmon.tostring()
+        ans = None
+        while ans != 'y' and ans != 'n':
+            ans = raw_input('Found an iface already in mon mode would you like to use it? (y/n) : ')
+            if ans == 'y':
+                pick = foundmon
 
-    pick = input('Pick one (starting from 0): ')
-    pick = interfaces[pick].name
+    if pick is None:
+        for i in interfaces:
+            print i.tostring()
 
-    print 'putting %s in mon mode' % pick
-    startmonmode(pick)
+        pick = input('Pick one (starting from 0): ')
+        pick = interfaces[pick].name
+
+        print 'putting %s in mon mode' % pick
+        startmonmode(pick)
+
     conf.iface = pick
     print 'ok I should be printing out packets now'
     sniff(count=1, prn=insert_ap, lfilter=lambda p: (
