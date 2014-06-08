@@ -57,11 +57,36 @@ def prga(s, datalength):
         s[j] = temp
         z.append(s[(s[i] + s[j]) % 256])
     return z
-"""
-Starting IV = (3, 255, x)
-Then for byte a of the key we need IV = (a+3, n-1, x)
 
-"""
+
+def simulate_resolved(b, iv, encr_byte, sk):
+    """
+
+    :param b: index of the byte in the secret key we want to simulate
+    :param iv: IV of the packet we're using
+    :param encr_byte: First encrypted byte of the WEP packet
+    :param sk: secret key
+    :return: the simulated value of sk[b]
+    """
+    k = iv + sk
+    # Perform b + 3 iterations of KSA
+    s = [i for i in range(256)]
+    j = 0
+    for i in range(b + 3):
+        j = (j + s[i] + k[i % len(k)]) % 256
+        # Swap(s[i], s[j])
+        temp = s[i]
+        s[i] = s[j]
+        s[j] = temp
+    # Reverse the PRGA/KSA to find the probable value of sk[b]
+    # 0xAA SNAP Header should be first plaintext byte of WEP packets
+    z = encr_byte ^ 0xAA
+    key_byte =  s.index(z) - j - s[b + 3]
+    # Will key_byte ever be negative?
+    if key_byte > 0:
+        return key_byte
+    else:
+        return key_byte + 256
 
 def crackWEPkey(keysize, packets):
     """
@@ -74,6 +99,7 @@ def crackWEPkey(keysize, packets):
         counts = [0] * 256
         for p in packets[keybyte+3]:
             # construct key counts
+            count[simulate_resolved(keybyte, p[0], p[1], key)] += 1
         # key[keybyte] = index of max(counts)
         key[keybyte] = max(enumerate(counts), key=lambda x: x[1])[0]
     return key
