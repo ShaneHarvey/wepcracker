@@ -1,7 +1,7 @@
 from subprocess import Popen, PIPE
 
 from scapy.all import *
-from scapy.layers.dot11 import Dot11, Dot11Beacon, Dot11ProbeResp, Dot11Elt
+from scapy.layers.dot11 import Dot11, Dot11Beacon, Dot11ProbeResp, Dot11Elt, Dot11WEP
 
 from interface import Interface
 
@@ -111,6 +111,22 @@ def iwconfig():
     return lst
 
 
+def test(pkt):
+    if pkt.haslayer(Dot11WEP):
+        addr1 = re.search('addr1=([:0-9a-f]+)', str(pkt.show))
+        addr2 = re.search('addr2=([:0-9a-f]+)', str(pkt.show))
+        addr3 = re.search('addr3=([:0-9a-f]+)', str(pkt.show))
+        iv = re.search("iv='([^']*)'", str(pkt.show))
+        webdata = re.search("wepdata='([^']*)'", str(pkt.show))
+        print '\n' + str(pkt.show2)
+        print 'addr1: ' + addr1.group(1)
+        print 'addr2: ' + addr2.group(1)
+        print 'addr3: ' + addr3.group(1)
+        print 'iv: ' + iv.group(1)
+        print 'wepdata: ' + webdata.group(1)
+        #print '\n########\naddr1: %s, addr2: %s addr3: %s, iv: %s\n webdata: %s\n########\n' % (addr1.group(1), addr2.group(1), addr3.group(1), iv.group(1), webdata.group(1))
+
+
 def main():
     global aplist
     aps = {}
@@ -139,10 +155,13 @@ def main():
 
     conf.iface = pick
     print 'ok I should be printing out packets now'
-    sniff(count=1, prn=insert_ap, lfilter=lambda p: (
-        (Dot11Beacon in p or Dot11ProbeResp in p) and 'privacy' in p.sprintf("{Dot11Beacon:%Dot11Beacon.cap%}"
-                                                                             "{Dot11ProbeResp:%Dot11ProbeResp.cap%}").split(
-            '+')))
+    # sniff(count=1, prn=insert_ap, lfilter=lambda p: (
+    #     (Dot11Beacon in p or Dot11ProbeResp in p) and 'privacy' in p.sprintf("{Dot11Beacon:%Dot11Beacon.cap%}"
+    #                                                                          "{Dot11ProbeResp:%Dot11ProbeResp.cap%}")
+    #     .split('+')))
+
+    sniff(prn=test)
+
     print 'Stopping mon mode on %s' % pick
     stopmonmode(pick)
 
