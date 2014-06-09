@@ -117,7 +117,7 @@ def test(pkt):
         addr2 = re.search('addr2=([:0-9a-f]+)', str(pkt.show))
         addr3 = re.search('addr3=([:0-9a-f]+)', str(pkt.show))
         iv = re.search("iv='([^']*)'", str(pkt.show))
-        webdata = re.search("wepdata='([^']*)'", str(pkt.show))
+        webdata = re.search("wepdata=['\"]([^']*)['\"]", str(pkt.show))
         print '\n' + str(pkt.show2)
         print 'addr1: ' + addr1.group(1)
         print 'addr2: ' + addr2.group(1)
