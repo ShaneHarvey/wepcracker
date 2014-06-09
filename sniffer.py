@@ -116,10 +116,10 @@ def test(pkt):
         addr1 = re.search('addr1=([:0-9a-f]+)', str(pkt.show))
         addr2 = re.search('addr2=([:0-9a-f]+)', str(pkt.show))
         addr3 = re.search('addr3=([:0-9a-f]+)', str(pkt.show))
-        iv = re.search("iv='([^']*)'", str(pkt.show))
+        iv = re.search("iv=['\"]([^']*)['\"]", str(pkt.show))
         webdata = re.search("wepdata=['\"]([^']*)['\"]", str(pkt.show))
-        print '\n' + str(pkt.show2)
-        print 'addr1: ' + addr1.group(1)
+        #print '\n' + str(pkt.show2)
+        print '\naddr1: ' + addr1.group(1)
         print 'addr2: ' + addr2.group(1)
         print 'addr3: ' + addr3.group(1)
         print 'iv: ' + iv.group(1)
@@ -141,7 +141,7 @@ def main():
         while ans != 'y' and ans != 'n':
             ans = raw_input('Found an iface already in mon mode would you like to use it? (y/n) : ')
             if ans == 'y':
-                pick = foundmon
+                pick = foundmon.name
 
     if pick is None:
         for i in interfaces:
@@ -149,7 +149,6 @@ def main():
 
         pick = input('Pick one (starting from 0): ')
         pick = interfaces[pick].name
-
         print 'putting %s in mon mode' % pick
         startmonmode(pick)
 
