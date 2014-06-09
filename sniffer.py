@@ -4,7 +4,7 @@ from scapy.all import *
 from scapy.layers.dot11 import Dot11, Dot11Beacon, Dot11ProbeResp, Dot11Elt, Dot11WEP
 
 from interface import Interface
-
+import wepcracker
 
 __author__ = 'michael'
 aplist = []
@@ -124,6 +124,10 @@ def test(pkt):
         print 'addr3: ' + addr3.group(1)
         print 'iv: ' + iv.group(1)
         print 'wepdata: ' + webdata.group(1)
+        # iv should always have 3 characters(bytes)
+        readable_iv = [ord(iv.group(1)[i]) for i in range(3)]
+        print '\nreadable iv: ' + str(readable_iv)
+        print 'Is iv weak: ' + str(wepcracker.weak_iv(readable_iv, 5))
         #print '\n########\naddr1: %s, addr2: %s addr3: %s, iv: %s\n webdata: %s\n########\n' % (addr1.group(1), addr2.group(1), addr3.group(1), iv.group(1), webdata.group(1))
 
 
