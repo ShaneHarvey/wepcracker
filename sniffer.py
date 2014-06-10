@@ -110,28 +110,25 @@ def iwconfig():
     devnull.close()
     return lst
 
-
+wep_count = 0
+iv_count = 0
 def test(pkt):
-    if pkt.haslayer(Dot11WEP):
-        addr1 = re.search('addr1=([:0-9a-f]+)', str(pkt.show))
-        addr2 = re.search('addr2=([:0-9a-f]+)', str(pkt.show))
-        addr3 = re.search('addr3=([:0-9a-f]+)', str(pkt.show))
-        iv = re.search("iv=['\"]([^']*)['\"]", str(pkt.show))
-        webdata = re.search("wepdata=['\"]([^']*)['\"]", str(pkt.show))
+    global wep_count, iv_count
+    wep_pkt = pkt.getlayer(Dot11WEP)
+    if wep_pkt:
+        wep_count += 1
+
         #print '\n' + str(pkt.show2)
-        print '\naddr1: ' + addr1.group(1)
-        print 'addr2: ' + addr2.group(1)
-        print 'addr3: ' + addr3.group(1)
-        print 'iv: ' + iv.group(1)
-        print 'wepdata: ' + webdata.group(1)
-        # iv should always have 3 characters(bytes)
-        try:
-            readable_iv = [ord(iv.group(1)[i]) for i in range(3)]
-            print '\nreadable iv: ' + str(readable_iv)
-            # My network is secured by a 128 bit key
-            print 'Is iv weak: ' + str(wepcracker.weak_iv(readable_iv, 13))
-        except:
-            print '\niv should be 3 bytes!:'+ iv.group(1)
+        #print '\naddr1: ' + pkt.addr1
+        #print 'addr2: ' + pkt.addr2
+        #print 'addr3: ' + pkt.addr3
+        #print 'iv: ' + wep_pkt.iv
+        #print 'wepdata[0]: ' + wep_pkt.wepdata[0]
+        readable_iv = [ord(char) for char in wep_pkt.iv]
+        # Shane: using 128bit WEP so key size is 13
+        if wepcracker.weak_iv(readable_iv, 13):
+            iv_count += 1
+            print 'weak iv: %s\tWEP count: %d\tIV count: %d' % (str(readable_iv), wep_count, iv_count)
         #print '\n########\naddr1: %s, addr2: %s addr3: %s, iv: %s\n webdata: %s\n########\n' % (addr1.group(1), addr2.group(1), addr3.group(1), iv.group(1), webdata.group(1))
 
 
