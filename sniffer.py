@@ -50,8 +50,14 @@ def insert_ap(pkt):
             crypto.add("WEP")
         else:
             crypto.add("OPN")
-    print "NEW AP: %r [%s], channed %d, %s" % (ssid, bssid, channel,
-                                               ' / '.join(crypto))
+
+    str_crypt = ' / '.join(crypto)
+
+    if len(ssid) > 0:
+        print '{0:20} | {1:20} | {2:2} | {3:10}'.format(ssid, bssid, channel, str_crypt)
+    else:
+        print '{0:20} | {1:20} | {2:2} | {3:10}'.format('HIDDEN', bssid, channel, str_crypt)
+
     aps[bssid] = (ssid, channel, crypto)
 
 
@@ -167,6 +173,8 @@ def main():
     try:
         hopper.start()
 
+        print '{0:^20} | {1:^20} | {2:^2} | {3:^10}'.format('SSID', 'BSSID', 'ch', 'crypto')
+        print '-------------------------------------------------------------'
         sniff(count=0, prn=insert_ap, lfilter=lambda p: (
             (Dot11Beacon in p or Dot11ProbeResp in p) and 'privacy' in p.sprintf("{Dot11Beacon:%Dot11Beacon.cap%}"
                                                                                  "{Dot11ProbeResp:%Dot11ProbeResp.cap%}")
@@ -174,7 +182,7 @@ def main():
 
         # sniff(prn=test)
         hopper.stop()
-    except:
+    except KeyboardInterrupt:
         hopper.stop()
 
     print 'Stopping mon mode on %s' % pick
