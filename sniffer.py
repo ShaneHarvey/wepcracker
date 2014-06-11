@@ -4,6 +4,7 @@ from subprocess import Popen, PIPE
 
 from scapy.all import *
 from scapy.layers.dot11 import Dot11, Dot11Beacon, Dot11ProbeResp, Dot11Elt, Dot11WEP
+from channelhopper import ChannelHopper
 
 from interface import Interface
 import wepcracker
@@ -161,12 +162,20 @@ def main():
 
     conf.iface = pick
     print 'ok I should be printing out packets now'
-    # sniff(count=1, prn=insert_ap, lfilter=lambda p: (
-    #     (Dot11Beacon in p or Dot11ProbeResp in p) and 'privacy' in p.sprintf("{Dot11Beacon:%Dot11Beacon.cap%}"
-    #                                                                          "{Dot11ProbeResp:%Dot11ProbeResp.cap%}")
-    #     .split('+')))
 
-    sniff(prn=test)
+    hopper = ChannelHopper(iface=pick)
+    try:
+        hopper.start()
+
+        sniff(count=0, prn=insert_ap, lfilter=lambda p: (
+            (Dot11Beacon in p or Dot11ProbeResp in p) and 'privacy' in p.sprintf("{Dot11Beacon:%Dot11Beacon.cap%}"
+                                                                                 "{Dot11ProbeResp:%Dot11ProbeResp.cap%}")
+            .split('+')))
+
+        # sniff(prn=test)
+        hopper.stop()
+    except:
+        hopper.stop()
 
     print 'Stopping mon mode on %s' % pick
     stop_mon_mode(pick)
