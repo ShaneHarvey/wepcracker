@@ -13,11 +13,8 @@ aplist = []
 aps = {}
 
 
-def getap(pkt):
+def get_ap(pkt):
     global aplist
-    # print pkt.summary()
-    if 'Salerno' in pkt.summary():
-        pass
     if pkt.haslayer(Dot11):
         if pkt.type == 0 and pkt.subtype == 8:
             if pkt.addr2 not in aplist:
@@ -57,19 +54,19 @@ def insert_ap(pkt):
     aps[bssid] = (ssid, channel, crypto)
 
 
-def startmonmode(iface):
+def start_mon_mode(iface):
     os.system('ifconfig %s down' % iface)
     os.system('iwconfig %s mode monitor' % iface)
     os.system('ifconfig %s up' % iface)
 
 
-def stopmonmode(iface):
+def stop_mon_mode(iface):
     os.system('ifconfig %s down' % iface)
     os.system('iwconfig %s mode managed' % iface)
     os.system('ifconfig %s up' % iface)
 
 
-def checkformon(lst):
+def check_for_mon(lst):
     rtn = None
     for i in lst:
         if i.mode == 'Monitor':
@@ -112,16 +109,19 @@ def iwconfig():
     devnull.close()
     return lst
 
+
 wep_count = 0
 iv_count = 0
+
+
 def test(pkt):
     global wep_count, iv_count
     wep_pkt = pkt.getlayer(Dot11WEP)
     if wep_pkt:
         wep_count += 1
 
-        #print '\n' + str(pkt.show2)
-        #print '\naddr1: ' + pkt.addr1
+        # print '\n' + str(pkt.show2)
+        # print '\naddr1: ' + pkt.addr1
         #print 'addr2: ' + pkt.addr2
         #print 'addr3: ' + pkt.addr3
         #print 'iv: ' + wep_pkt.iv
@@ -131,7 +131,7 @@ def test(pkt):
         if wepcracker.weak_iv(readable_iv, 13):
             iv_count += 1
             print 'weak iv: %s\tWEP count: %d\tIV count: %d' % (str(readable_iv), wep_count, iv_count)
-        #print '\n########\naddr1: %s, addr2: %s addr3: %s, iv: %s\n webdata: %s\n########\n' % (addr1.group(1), addr2.group(1), addr3.group(1), iv.group(1), webdata.group(1))
+            #print '\n########\naddr1: %s, addr2: %s addr3: %s, iv: %s\n webdata: %s\n########\n' % (addr1.group(1), addr2.group(1), addr3.group(1), iv.group(1), webdata.group(1))
 
 
 def main():
@@ -139,7 +139,7 @@ def main():
     aps = {}
 
     interfaces = iwconfig()
-    foundmon = checkformon(interfaces)
+    foundmon = check_for_mon(interfaces)
     pick = None
 
     if foundmon is not None:
@@ -157,7 +157,7 @@ def main():
         pick = input('Pick one (starting from 0): ')
         pick = interfaces[pick].name
         print 'putting %s in mon mode' % pick
-        startmonmode(pick)
+        start_mon_mode(pick)
 
     conf.iface = pick
     print 'ok I should be printing out packets now'
@@ -169,7 +169,7 @@ def main():
     sniff(prn=test)
 
     print 'Stopping mon mode on %s' % pick
-    stopmonmode(pick)
+    stop_mon_mode(pick)
 
 
 if __name__ == '__main__':
