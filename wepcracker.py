@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 __author__ = 'shane'
 
+# N id the size of the seed array for KSA
 N = 256
+
 
 def ksa(k):
     """
@@ -27,7 +29,6 @@ def ksa(k):
         s[i] = s[j]
         s[j] = temp
     return s
-
 
 
 def prga(s, datalength):
@@ -82,7 +83,7 @@ def simulate_resolved(b, iv, encr_byte, sk):
     # Reverse the PRGA/KSA to find the probable value of sk[b]
     # 0xAA SNAP Header should be first plaintext byte of WEP packets
     z = encr_byte ^ 0xAA
-    key_byte =  s.index(z) - j - s[b + 3]
+    key_byte = s.index(z) - j - s[b + 3]
     # Will key_byte ever be negative?
     if key_byte > 0:
         return key_byte
@@ -90,6 +91,7 @@ def simulate_resolved(b, iv, encr_byte, sk):
         return key_byte + N
 
 
+# TODO: make sure this is correct
 def weak_iv(iv, sk_len):
     """
     H1kari's method of weak IV detection from:
@@ -105,24 +107,25 @@ def weak_iv(iv, sk_len):
     a = x + y
     b = (x + y) - z
     l = sk_len
-    i = 0
     for B in range(l):
-        if ((((0 <= a < B) or
-        (a == B and b == (B + 1) * 2)) and
-        (a != (B + 1) / 2 if B % 2 else 1)) or
-        (a == B + 1 and (b == (B + 1) * 2 if B == 0 else 1)) or
-        (x == B + 3 and y == N - 1) or
-        (((x == 1 and y == (B / 2) + 1) or
-        (x == (B / 2) + 2 and y == (N - 1) - x)) if (B != 0 and not (B % 2)) else 0)):
+        if ((0 <= a < B) or (a == B and b == (B + 1) * 2) and (a != (B + 1) / 2 if B % 2 else 1) or
+           (a == B + 1 and (b == (B + 1) * 2 if B == 0 else 1)) or
+           (x == B + 3 and y == N - 1) or
+           ((x == 1 and y == (B / 2) + 1) or (x == (B / 2) + 2 and y == (N - 1) - x) if (B != 0 and not (B % 2)) else 0)):
             return True
     return False
 
 
-def crackWEPkey(keysize, packets):
-    """
-    Starting IV = (3, 255, x)
-    Then for byte a of the key we need IV = (a+3, 255, x)
+def weak_iv_table():
+    return
 
+
+def check_key(key):
+    return
+
+def crack_wep(keysize, packets):
+    """
+    Analyzes the packets  and for each one it
     """
     key = [0] * keysize
     for keybyte in range(keysize):
@@ -137,6 +140,3 @@ def crackWEPkey(keysize, packets):
 
 def main():
     print("WEPcracker")
-
-if __name__ == '__main__':
-    main()
