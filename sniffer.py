@@ -7,11 +7,12 @@ from scapy.layers.dot11 import Dot11, Dot11Beacon, Dot11ProbeResp, Dot11Elt, Dot
 from channelhopper import ChannelHopper
 
 from interface import Interface
+from sniffingthread import ThreadedSniffer
 import wepcracker
 
 __author__ = 'michael'
 aplist = []
-aps = {}
+aps = []
 
 
 def get_ap(pkt):
@@ -21,6 +22,15 @@ def get_ap(pkt):
             if pkt.addr2 not in aplist:
                 aplist.append(pkt.addr2)
                 print "BSSID: %s SSID: %s" % (pkt.addr2, pkt.info)
+
+
+def is_printable(s, codec='utf8'):
+    try:
+        s.decode(codec)
+    except UnicodeDecodeError:
+        return False
+    else:
+        return True
 
 
 def insert_ap(pkt):
@@ -37,7 +47,7 @@ def insert_ap(pkt):
     crypto = set()
     while isinstance(p, Dot11Elt):
         if p.ID == 0:
-            ssid = p.info
+            ssid = str(p.info)
         elif p.ID == 3:
             channel = ord(p.info)
         elif p.ID == 48:
@@ -53,12 +63,12 @@ def insert_ap(pkt):
 
     str_crypt = ' / '.join(crypto)
 
-    if len(ssid) > 0:
-        print '{0:20} | {1:20} | {2:2} | {3:10}'.format(ssid, bssid, channel, str_crypt)
+    if len(ssid) > 0 and is_printable(ssid):
+        print '{0:20s} | {1:20} | {2:2} | {3:10}'.format(ssid, bssid, channel, str_crypt)
     else:
         print '{0:20} | {1:20} | {2:2} | {3:10}'.format('HIDDEN', bssid, channel, str_crypt)
 
-    aps[bssid] = (ssid, channel, crypto)
+    aps.append((ssid, bssid, channel, crypto))
 
 
 def start_mon_mode(iface):
