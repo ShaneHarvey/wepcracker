@@ -24,5 +24,7 @@ class ChannelHopper(threading.Thread):
             for channel in channels:
                 if not self.running:
                     break
-                os.system('iwconfig %s channel %d' % (self.iface, channel))
+                out = os.system('iwconfig %s channel %d' % (self.iface, channel))
+                if out == 1:
+                    break
                 time.sleep(1)
