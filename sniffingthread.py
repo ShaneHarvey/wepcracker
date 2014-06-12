@@ -1,12 +1,10 @@
 import time
 from select import select
 import threading
-
-from data import *
-from config import conf
-from gtk.gdk import offscreen_window_get_embedder
-from utils import PcapReader
-import plist
+from scapy import plist
+from scapy.config import conf
+from scapy.data import MTU, ETH_P_ALL
+from scapy.utils import PcapReader
 
 
 __author__ = 'Michael'
@@ -15,11 +13,11 @@ __author__ = 'Michael'
 class ThreadedSniffer(threading.Thread):
 
     def __init__(self, count=0, store=1, offline=None, prn=None, lfilter=None, L2socket=None, timeout=None,
-                opened_socket=None, stop_filter=None, kill_switch=False):
+                opened_socket=None, stop_filter=None):
         threading.Thread.__init__(self)
         self.count = count
         self.store = store
-        self.offline=offline
+        self.offline = offline
         self.prn = prn
         self.lfilter = lfilter
         self.L2socket = L2socket
@@ -53,6 +51,8 @@ class ThreadedSniffer(threading.Thread):
             stoptime = time.time() + self.timeout
         remain = None
         while 1:
+            if not self.running:
+                break
             try:
                 if self.timeout is not None:
                     remain = stoptime - time.time()
@@ -75,8 +75,6 @@ class ThreadedSniffer(threading.Thread):
                     if self.stop_filter and self.stop_filter(p):
                         break
                     if 0 < self.count <= c:
-                        break
-                    if self.running:
                         break
             except KeyboardInterrupt:
                 break
