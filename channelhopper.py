@@ -26,5 +26,6 @@ class ChannelHopper(threading.Thread):
                     break
                 out = os.system('iwconfig %s channel %d' % (self.iface, channel))
                 if out == 1:
+                    self.running = False
                     break
                 time.sleep(1)
