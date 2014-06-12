@@ -3,6 +3,7 @@
 from subprocess import Popen, PIPE
 
 from scapy.all import *
+from scapy.layers import netbios
 from scapy.layers.dot11 import Dot11, Dot11Beacon, Dot11ProbeResp, Dot11Elt, Dot11WEP
 from channelhopper import ChannelHopper
 
@@ -49,7 +50,10 @@ def insert_ap(pkt):
         if p.ID == 0:
             ssid = str(p.info)
         elif p.ID == 3:
-            channel = ord(p.info)
+            try:
+                channel = ord(p.info)
+            except TypeError:
+                channel = '?'
         elif p.ID == 48:
             crypto.add("WPA2")
         elif p.ID == 221 and p.info.startswith('\x00P\xf2\x01\x01\x00'):
@@ -62,13 +66,15 @@ def insert_ap(pkt):
             crypto.add("OPN")
 
     str_crypt = ' / '.join(crypto)
+    found_ap = (ssid, bssid, channel, crypto)
 
-    if len(ssid) > 0 and is_printable(ssid):
-        print '{0:20s} | {1:20} | {2:2} | {3:10}'.format(ssid, bssid, channel, str_crypt)
-    else:
-        print '{0:20} | {1:20} | {2:2} | {3:10}'.format('HIDDEN', bssid, channel, str_crypt)
+    if found_ap not in aps:
+        if len(ssid) > 0 and is_printable(ssid):
+            print '{0:^6d} | {1:20s} | {2:20} | {3:2} | {4:10}'.format(len(aps), ssid, bssid, channel, str_crypt)
+        else:
+            print '{0:^6d} | {1:20} | {2:20} | {3:2} | {4:10}'.format(len(aps), 'HIDDEN', bssid, channel, str_crypt)
 
-    aps.append((ssid, bssid, channel, crypto))
+        aps.append(found_ap)
 
 
 def start_mon_mode(iface):
@@ -90,6 +96,26 @@ def check_for_mon(lst):
             rtn = i
             break
     return rtn
+
+
+def get_target(iface):
+    conf.iface = iface
+    hopper = ChannelHopper(iface=iface, oneitter=True)
+    sniffer = ThreadedSniffer(prn=insert_ap, lfilter=lambda p: (
+        (Dot11Beacon in p or Dot11ProbeResp in p) and 'privacy' in p.sprintf("{Dot11Beacon:%Dot11Beacon.cap%}"
+                                                                             "{Dot11ProbeResp:%Dot11ProbeResp.cap%}")
+        .split('+')))
+
+    print ' count | {0:^20} | {1:^20} | {2:^2} | {3:^10}'.format('SSID', 'BSSID', 'ch', 'crypto')
+    print '-------------------------------------------------------------'
+
+    sniffer.start()
+    hopper.start()
+    hopper.join()
+    sniffer.stop()
+    hopper.stop()
+    pick = input('\nchoose a network to crack (starting from 0) : ')
+    return pick
 
 
 def iwconfig():
@@ -153,7 +179,7 @@ def test(pkt):
 
 def main():
     global aplist
-    aps = {}
+    global aps
 
     interfaces = iwconfig()
     foundmon = check_for_mon(interfaces)
@@ -177,23 +203,9 @@ def main():
         start_mon_mode(pick)
 
     conf.iface = pick
-    print 'ok I should be printing out packets now'
 
-    hopper = ChannelHopper(iface=pick)
-    try:
-        hopper.start()
-
-        print '{0:^20} | {1:^20} | {2:^2} | {3:^10}'.format('SSID', 'BSSID', 'ch', 'crypto')
-        print '-------------------------------------------------------------'
-        sniff(count=0, prn=insert_ap, lfilter=lambda p: (
-            (Dot11Beacon in p or Dot11ProbeResp in p) and 'privacy' in p.sprintf("{Dot11Beacon:%Dot11Beacon.cap%}"
-                                                                                 "{Dot11ProbeResp:%Dot11ProbeResp.cap%}")
-            .split('+')))
-
-        # sniff(prn=test)
-        hopper.stop()
-    except KeyboardInterrupt:
-        hopper.stop()
+    network = get_target(iface=pick)
+    print 'you picked: ' + str(aps[network][0])
 
     print 'Stopping mon mode on %s' % pick
     stop_mon_mode(pick)

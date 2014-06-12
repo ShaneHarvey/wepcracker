@@ -37,5 +37,5 @@ class ChannelHopper(threading.Thread):
 
                 time.sleep(1)
 
-            if not self.oneitter:
+            if self.oneitter:
                 self.running = False
