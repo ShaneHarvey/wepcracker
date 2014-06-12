@@ -8,10 +8,12 @@ __author__ = 'Michael'
 class ChannelHopper(threading.Thread):
     running = False
     iface = None
+    oneitter = False
 
-    def __init__(self, iface):
+    def __init__(self, iface, oneitter=False):
         threading.Thread.__init__(self)
         self.iface = iface
+        self.oneitter = oneitter
 
     def stop(self):
         self.running = False
@@ -21,11 +23,19 @@ class ChannelHopper(threading.Thread):
         self.running = True
 
         while self.running:
+
             for channel in channels:
+
                 if not self.running:
                     break
+
                 out = os.system('iwconfig %s channel %d' % (self.iface, channel))
+
                 if out == 1:
                     self.running = False
                     break
+
                 time.sleep(1)
+
+            if not self.oneitter:
+                self.running = False
