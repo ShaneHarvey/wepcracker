@@ -53,7 +53,7 @@ def insert_ap(pkt):
             try:
                 channel = ord(p.info)
             except TypeError:
-                channel = '?'
+                return
         elif p.ID == 48:
             crypto.add("WPA2")
         elif p.ID == 221 and p.info.startswith('\x00P\xf2\x01\x01\x00'):
@@ -65,15 +65,14 @@ def insert_ap(pkt):
         else:
             crypto.add("OPN")
 
+    if len(ssid) < 1 or not is_printable(ssid) or ord(ssid[0]) == 0:
+        ssid = 'HIDDEN'
+
     str_crypt = ' / '.join(crypto)
     found_ap = (ssid, bssid, channel, crypto)
 
     if found_ap not in aps:
-        if len(ssid) > 0 and is_printable(ssid):
-            print '{0:^6d} | {1:20s} | {2:20} | {3:2} | {4:10}'.format(len(aps), ssid, bssid, channel, str_crypt)
-        else:
-            print '{0:^6d} | {1:20} | {2:20} | {3:2} | {4:10}'.format(len(aps), 'HIDDEN', bssid, channel, str_crypt)
-
+        print '{0:^6d} | {1:20s} | {2:20} | {3:2} | {4:10}'.format(len(aps), ssid, bssid, channel, str_crypt)
         aps.append(found_ap)
 
 
