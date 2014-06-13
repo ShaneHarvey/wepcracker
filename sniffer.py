@@ -3,7 +3,6 @@
 from subprocess import Popen, PIPE
 
 from scapy.all import *
-from scapy.layers import netbios
 from scapy.layers.dot11 import Dot11, Dot11Beacon, Dot11ProbeResp, Dot11Elt, Dot11WEP
 from channelhopper import ChannelHopper
 
@@ -12,17 +11,16 @@ from sniffingthread import ThreadedSniffer
 import wepcracker
 
 __author__ = 'michael'
-aplist = []
 aps = []
+wep_count = 0
+iv_count = 0
+pkt_lst = []
+target_bssid = None
 
 
-def get_ap(pkt):
-    global aplist
-    if pkt.haslayer(Dot11):
-        if pkt.type == 0 and pkt.subtype == 8:
-            if pkt.addr2 not in aplist:
-                aplist.append(pkt.addr2)
-                print "BSSID: %s SSID: %s" % (pkt.addr2, pkt.info)
+def change_channel(iface, channel):
+    out = os.system('iwconfig %s channel %d' % (iface, channel))
+    return out
 
 
 def is_printable(s, codec='utf8'):
@@ -72,7 +70,7 @@ def insert_ap(pkt):
     found_ap = (ssid, bssid, channel, crypto)
 
     if found_ap not in aps:
-        print '{0:^6d} | {1:20s} | {2:20} | {3:2} | {4:10}'.format(len(aps), ssid, bssid, channel, str_crypt)
+        print '| {:^5d} | {:20s} | {:^20} | {:^2} | {:^10} |'.format(len(aps), ssid, bssid, channel, str_crypt)
         aps.append(found_ap)
 
 
@@ -105,8 +103,9 @@ def get_target(iface):
                                                                              "{Dot11ProbeResp:%Dot11ProbeResp.cap%}")
         .split('+')))
 
-    print ' count | {0:^20} | {1:^20} | {2:^2} | {3:^10}'.format('SSID', 'BSSID', 'ch', 'crypto')
-    print '-------------------------------------------------------------'
+    print '-------------------------------------------------------------------------'
+    print '| {:^5} | {:^20} | {:^20} | {:^2} | {:^10} |'.format('count', 'SSID', 'BSSID', 'ch', 'crypto')
+    print '|-------|----------------------|----------------------|----|------------|'
 
     sniffer.start()
     hopper.start()
@@ -179,6 +178,9 @@ def test(pkt):
 def main():
     global aplist
     global aps
+    global target_bssid
+    global wep_count
+    global pkt_lst
 
     interfaces = iwconfig()
     foundmon = check_for_mon(interfaces)
@@ -204,6 +206,7 @@ def main():
     conf.iface = pick
 
     network = get_target(iface=pick)
+    # (ssid, bssid, channel, crypto) is the format
     print 'you picked: ' + str(aps[network][0])
 
     print 'Stopping mon mode on %s' % pick
@@ -211,4 +214,7 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        pass
