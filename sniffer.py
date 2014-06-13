@@ -151,8 +151,22 @@ def iwconfig():
     return lst
 
 
-wep_count = 0
-iv_count = 0
+def pkt_collector(pkt):
+    global pkt_lst, wep_count
+    wep_pkt = pkt.getlayer(Dot11WEP)
+
+    # if wep_pkt:
+    #     print pkt.show
+    #     return
+
+    if wep_pkt and (pkt.addr1 == target_bssid or pkt.addr2 == target_bssid or pkt.addr3 == target_bssid):
+        pkt_lst.append((wep_pkt.iv, wep_pkt.wepdata))
+        readable_iv = [ord(char) for char in wep_pkt.iv]
+        wep_count += 1
+
+        if wepcracker.weak_iv(readable_iv, 13):
+            iv_count += 1
+            print 'weak iv: %s\tWEP count: %d\tIV count: %d' % (str(readable_iv), wep_count, iv_count)
 
 
 def test(pkt):
