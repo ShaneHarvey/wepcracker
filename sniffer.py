@@ -222,8 +222,20 @@ def main():
     network = get_target(iface=pick)
     # (ssid, bssid, channel, crypto) is the format
     print 'you picked: ' + str(aps[network][0])
+    target_bssid = aps[network][1]
+    change_channel(pick, aps[network][2])
+    sniffer = ThreadedSniffer(prn=pkt_collector)
+    sniffer.start()
 
-    print 'Stopping mon mode on %s' % pick
+    while wep_count < 1:
+        time.sleep(1)
+
+    sniffer.stop()
+
+    print 'wep count: %d' % wep_count
+    print 'pkt_lst: ' + str(pkt_lst)
+
+    print 'Stopping mon mode on %s' % str(pick)
     stop_mon_mode(pick)
 
 
