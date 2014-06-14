@@ -130,7 +130,7 @@ def crack_wep(keysize, packets):
     key = [0] * keysize
     for keybyte in range(keysize):
         counts = [0] * 256
-        for p in packets[keybyte+3]:
+        for p in packets:
             # construct key counts
             counts[simulate_resolved(keybyte, p[0], p[1], key)] += 1
         # key[keybyte] = index of max(counts)
