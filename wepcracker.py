@@ -94,7 +94,7 @@ def weak_iv(iv, wep_key_len):
 
     :param iv: the iv in question
     :param wep_key_len: the length of the wep key (5 or 13)
-    :return: true if iv is weak
+    :return: the key index that the iv is weak against or -1
     """
     x = iv[0]
     y = iv[1]
@@ -106,8 +106,8 @@ def weak_iv(iv, wep_key_len):
            (a == B + 1 and (b == (B + 1) * 2 if B == 0 else 1)) or
            (x == B + 3 and y == N - 1) or
            ((x == 1 and y == (B / 2) + 1) or (x == (B / 2) + 2 and y == (N - 1) - x) if (B != 0 and not (B % 2)) else 0)):
-            return True
-    return False
+            return B
+    return -1
 
 
 # TODO
@@ -129,8 +129,11 @@ def crack_wep(wep_key_len, full_packets,  short_packets, wep_key, b):
         return check_key(wep_key, full_packets)
     counts = [0] * 256
     for p in short_packets:
+        iv = p[0]
+        byte = p[1]
         # construct byte counts
-        counts[simulate_resolved(b, p[0], p[1], wep_key)] += 1
+        if weak_iv(iv, wep_key_len) == b:
+            counts[simulate_resolved(b, iv, byte, wep_key)] += 1
     # Try the top 10 most frequent byte values
     for byte in sorted(range(len(counts)), key=counts.__getitem__, reverse=True)[0:10]:
         wep_key[b] = byte

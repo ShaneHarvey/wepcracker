@@ -164,7 +164,7 @@ def pkt_collector(pkt):
         readable_iv = [ord(char) for char in wep_pkt.iv]
         wep_count += 1
 
-        if wepcracker.weak_iv(readable_iv, 13):
+        if wepcracker.weak_iv(readable_iv, 13) >= 0:
             iv_count += 1
             print 'weak iv: %s\tWEP count: %d\tIV count: %d' % (str(readable_iv), wep_count, iv_count)
 
@@ -183,7 +183,7 @@ def test(pkt):
         #print 'wepdata[0]: ' + wep_pkt.wepdata[0]
         readable_iv = [ord(char) for char in wep_pkt.iv]
         # Shane: using 128bit WEP so key size is 13
-        if wepcracker.weak_iv(readable_iv, 13):
+        if wepcracker.weak_iv(readable_iv, 13) >= 0:
             iv_count += 1
             print 'weak iv: %s\tWEP count: %d\tIV count: %d' % (str(readable_iv), wep_count, iv_count)
             #print '\n########\naddr1: %s, addr2: %s addr3: %s, iv: %s\n webdata: %s\n########\n' % (addr1.group(1), addr2.group(1), addr3.group(1), iv.group(1), webdata.group(1))
