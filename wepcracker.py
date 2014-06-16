@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import wep
 __author__ = 'shane'
 
 # N id the size of the seed array for KSA
@@ -66,6 +67,8 @@ def check_key(wep_key, full_packets):
     :param full_packets: a list of complete wep packets
     :return: True if the key is correct
     """
+    for p in full_packets:
+        print p
     return False
 
 
