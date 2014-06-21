@@ -3,7 +3,7 @@
 from subprocess import Popen, PIPE
 
 from scapy.all import *
-from scapy.layers.dot11 import Dot11, Dot11Beacon, Dot11ProbeResp, Dot11Elt, Dot11WEP
+from scapy.layers.dot11 import Dot11, Dot11Beacon, Dot11ProbeResp, Dot11Elt, Dot11WEP, Dot11PacketList
 from channelhopper import ChannelHopper
 
 from interface import Interface
@@ -16,6 +16,29 @@ wep_count = 0
 iv_count = 0
 pkt_lst = []
 target_bssid = None
+
+
+def decrypt_cap(file_name, key):
+    enc = rdpcap(file_name)
+    print 'SHOWWING ENC-------------------------------------------'
+    enc.show()
+    enc[0]
+    conf.wepkey = key
+    dec = Dot11PacketList(enc).toEthernet()
+    print 'SHOWWING DENC------------------------------------------'
+    dec.show()
+    dec[0]
+    return dec
+
+
+def is_correct_key(pkt, key):
+    conf.wepkey = key
+    pkt.unwep()
+    del pkt.chksum
+    packet.__class__(str(pkt))
+    csum = pkt.chksum
+
+    raise Exception('This method does not work, dont know how to get real csum')
 
 
 def change_channel(iface, channel):
@@ -242,5 +265,9 @@ def main():
 if __name__ == '__main__':
     try:
         main()
+        #decrypt_cap('/home/michael/homeagain-01.cap', '\xF2\xF5\xA2\x2A\xD9')
+        #enc = rdpcap('/home/michael/homeagain-01.cap')
+        #print is_correct_key(enc[0], '0000000000')
+        #print is_correct_key(enc[0], '\xF2\xF5\xA2\x2A\xD9')
     except KeyboardInterrupt:
         pass
