@@ -4,8 +4,8 @@ from subprocess import Popen, PIPE
 
 from scapy.all import *
 from scapy.layers.dot11 import Dot11, Dot11Beacon, Dot11ProbeResp, Dot11Elt, Dot11WEP, Dot11PacketList
-from channelhopper import ChannelHopper
 
+from channelhopper import ChannelHopper
 from interface import Interface
 from sniffingthread import ThreadedSniffer
 import wepcracker
@@ -22,23 +22,25 @@ def decrypt_cap(file_name, key):
     enc = rdpcap(file_name)
     print 'SHOWWING ENC-------------------------------------------'
     enc.show()
-    enc[0]
     conf.wepkey = key
     dec = Dot11PacketList(enc).toEthernet()
     print 'SHOWWING DENC------------------------------------------'
     dec.show()
-    dec[0]
     return dec
 
 
 def is_correct_key(pkt, key):
+    oldsum = pkt.chksum
+
     conf.wepkey = key
     pkt.unwep()
+
     del pkt.chksum
     packet.__class__(str(pkt))
-    csum = pkt.chksum
 
-    raise Exception('This method does not work, dont know how to get real csum')
+    newsum = pkt.chksum
+
+    return oldsum == newsum
 
 
 def change_channel(iface, channel):
@@ -175,7 +177,7 @@ def iwconfig():
 
 
 def pkt_collector(pkt):
-    global pkt_lst, wep_count
+    global pkt_lst, wep_count, iv_count
     wep_pkt = pkt.getlayer(Dot11WEP)
 
     # if wep_pkt:
